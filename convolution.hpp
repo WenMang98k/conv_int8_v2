@@ -58,8 +58,44 @@ struct Layer_Type{
 
 	int kernel;  // 卷积核的尺寸，1或者3
 	int stride;  // 卷积核的步长，1或者2
-	float scaler;  // 反量化因子
+	float pscaler;  // 反量化因子
 	bool is_yolo;  // 是否是输出层，输出层的话，不做relu
+
+	float nscaler;  // 反量化因子
+	int len_i;
+	int len_w;
+	int len_o;
+	Layer_Type(int id,
+			int rbn,int rbs,int rrs,int ros,
+			int ibn,int ibs,int irs,
+			int obn,int obs,int ors,
+			int k,int s,float sc,bool i):
+		 layer_id(id),
+
+		 RC_block_num(rbn),
+		 RC_block_size(rbs),
+		 RC_real_size(rrs),
+		 RC_out_size(ros),
+
+		 CHI_block_num(ibn),
+		 CHI_block_size(ibs),
+		 CHI_real_size(irs),
+
+		 CHO_block_num(obn),
+		 CHO_block_size(obs),
+		 CHO_real_size(ors),
+
+		 kernel(k),
+		 stride(s),
+		 pscaler(sc),
+		 is_yolo(i)
+	{
+		 nscaler=sc*0.1;
+		 len_i = rbn * rbn * ibn * obn * rbs * rbs * ibs / 16;
+		 len_w =  rbn * rbn * ibn * obn *(obs * 4 +  k * k * obs * ibs )/ 16;
+		 len_o = rbn * rbn * ibn * obn * ros * ros * obs / 16 / 2;
+	};
+
 };
 
 void convolution(
