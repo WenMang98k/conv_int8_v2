@@ -20,9 +20,11 @@
 
 ### 2022.03.28  第二次综合
 
-主要改变了一些循环的tripout和pipeline。综合结果见图1![alt][img02]
+主要改变了一些循环的tripout和pipeline。综合结果见图1
 
-[img0]:https://github.com/BintaoWang/conv_int8_v2/blob/master/result/64-64-16-64sulotion2.jpg "第二次综合结果"
+![alt][img02]
+
+
 
 
 
@@ -103,3 +105,4 @@ int main(){
 
 
 [img01]:https://cdn-media-1.freecodecamp.org/images/1*D3L--z7Mx3-LqL9o6sbUgQ.png "测试文章内引用"
+[img02]:https://github.com/BintaoWang/conv_int8_v2/blob/master/result/64-64-16-64sulotion2.jpg "第二次综合结果"
