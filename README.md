@@ -25,6 +25,7 @@
 主要改变了一些循环的tripout和pipeline。综合结果见图1<br>
 ![img02](https://github.com/BintaoWang/conv_int8_v2/blob/master/result/64-64-16-64sulotion2.jpg "第二次综合结果")
 
+
  |     |    bram  |      dsp    |
  | :----------   |  :---------:  | ---------------: |
  |   total  |  706       |  653  |
