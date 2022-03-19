@@ -7,17 +7,17 @@ int main()
 			0,		// layer_id
 
 			1,		// RC_block_num
-			64,		// RC_block_size
+			66,		// RC_block_size 与kernel有关系
 			64,		// RC_real_size
-			32,		// RC_out_size
+			64,		// RC_out_size 与stride有关
 
 			1,		// CHI_block_num
 			32,		// CHI_block_size
-			16,		// CHI_real_size
+			32,		// CHI_real_size
 
 			1,		// CHO_block_num
 			64,		// CHO_block_size
-			32,		// CHO_real_size
+			64,		// CHO_real_size
 
 			3,		// kernel
 			1,		// stride

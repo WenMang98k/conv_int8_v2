@@ -3,17 +3,18 @@
 // load ifm padding data from AXI4-Stream to BRAM
 // 按照[row][col][channel_in] channel_in->col->row
 void load_ifm(
-		int RC_real_size,  // layer.RC_real_size
+		int RC_block_size,  // layer.RC_block_size
+		int CHI_block_size,  // layer.CHI_block_size
 		AXI_VAL_I *str_in_0,// 8bit * 16 =128
 		dtype ifm[IFM_MAX + 2][IFM_MAX + 2][TN])
 {
-	load_ifm_label0:for(int i = 0; i < RC_real_size + 2; i ++){
+	load_ifm_label0:for(int i = 0; i < RC_block_size; i ++){
 #pragma HLS LOOP_TRIPCOUNT min=66 max=66
-		for(int j = 0; j < RC_real_size + 2; j ++){
+		for(int j = 0; j < RC_block_size; j ++){
 #pragma HLS LOOP_TRIPCOUNT min=66 max=66
 #pragma HLS PIPELINE
 
-			for(int k = 0; k < TN; k +=16){
+			for(int k = 0; k < CHI_block_size; k +=16){
 #pragma HLS LOOP_TRIPCOUNT min=16 max=16
 //#pragma HLS UNROLL
 				AXI_VAL_I input = *str_in_0;
@@ -42,7 +43,8 @@ void load_ifm(
 // load bias and weights data from AXI-4_Stream to DRAM
 void load_ibw(
 		int kernel,  // layer.kernel
-		int CHO_real_size,  // layer.CHO_real_size
+		int CHI_block_size,  // layer.CHI_block_size
+		int CHO_block_size,  // layer.CHO_block_size
 		AXI_VAL_I *str_in_1,
 		int bias[TM],
 		dtype weights[KERNEL][KERNEL][TN][TM])
@@ -50,8 +52,8 @@ void load_ibw(
 	AXI_VAL_I input;
 
 	load_bias:
-	for(int i = 0; i < CHO_real_size / 4; i ++){  // TM * 32 / 128
-#pragma HLS LOOP_TRIPCOUNT min=16 max=16
+	for(int i = 0; i < CHO_block_size / 4; i ++){  // TM * 32 / 128
+#pragma HLS LOOP_TRIPCOUNT min=64 max=64
 #pragma HLS PIPELINE
 		input = *str_in_1;
 		str_in_1 ++;
@@ -74,20 +76,42 @@ void load_ibw(
 		for(int j = 0; j < kernel; j ++){
 #pragma HLS LOOP_TRIPCOUNT min=3 max=3
 #pragma HLS PIPELINE
-			for(int k = 0; k < CHO_real_size; k ++){
+			for(int k = 0; k < CHO_block_size; k ++){
 #pragma HLS LOOP_TRIPCOUNT min=64 max=64
-				input = *str_in_1;
-				str_in_1 ++;
 
-				for(int l = 0; l < TN; l ++){
+				for(int l = 0; l < CHI_block_size; l +=16){
 #pragma HLS LOOP_TRIPCOUNT min=16 max=16
 #pragma HLS UNROLL
-					weights[i][j][l][k] = input.data[l];
+					input = *str_in_1;
+					str_in_1 ++;
+					weights[i][j][l+0][k] = input.data[l+0];
+					weights[i][j][l+1][k] = input.data[l+1];
+					weights[i][j][l+2][k] = input.data[l+2];
+					weights[i][j][l+3][k] = input.data[l+3];
+
+					weights[i][j][l+4][k] = input.data[l+4];
+					weights[i][j][l+5][k] = input.data[l+5];
+					weights[i][j][l+6][k] = input.data[l+6];
+					weights[i][j][l+7][k] = input.data[l+7];
+
+					weights[i][j][l+8][k] = input.data[l+8];
+					weights[i][j][l+9][k] = input.data[l+9];
+					weights[i][j][l+10][k] = input.data[l+10];
+					weights[i][j][l+11][k] = input.data[l+11];
+
+					weights[i][j][l+12][k] = input.data[l+12];
+					weights[i][j][l+13][k] = input.data[l+13];
+					weights[i][j][l+14][k] = input.data[l+14];
+					weights[i][j][l+15][k] = input.data[l+15];
+
 				}
 			}
 		}
 	}
 }
+
+
+//对于输入、输出通道改变的情况，应该建立乘累加缓冲树
 
 // on chip macc
 void macc(
@@ -95,21 +119,23 @@ void macc(
 		int RC_out_size,  // layer.RC_real_size
 		int stride,  // layer.max_pool_control
 		int channel_in_iter,
+		int CHI_block_size,  // layer.CHI_block_size
+		int CHO_block_size,  // layer.CHO_block_size
 		dtype ifm[IFM_MAX + 2][IFM_MAX + 2][TN],
 		dtype weights[KERNEL][KERNEL][TN][TM],
 		int bias[TM],
 		int ofm[OFM_MAX][OFM_MAX][TM])
 {
 	for(int i = 0; i < kernel; i ++){
-#pragma HLS LOOP_TRIPCOUNT min=3 max=3
+#pragma HLS LOOP_TRIPCOUNT min=1 max=3
 		for(int j = 0; j < kernel; j ++){
-#pragma HLS LOOP_TRIPCOUNT min=3 max=3
+#pragma HLS LOOP_TRIPCOUNT min=1 max=3
 			for(int k = 0; k < RC_out_size; k ++){
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
 				for(int l = 0; l < RC_out_size; l ++){
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
-					for(int m = 0; m < TM; m ++){
+					for(int m = 0; m < CHO_block_size; m ++){
 #pragma HLS LOOP_TRIPCOUNT min=64 max=64
 						int bias_res;
 
@@ -123,22 +149,38 @@ void macc(
 						int y_offset = j + l * stride;
 
 						// multiply
-						int mul_res_0 = ifm[x_offset][y_offset][0] * weights[i][j][0][m];
-						int mul_res_1 = ifm[x_offset][y_offset][1] * weights[i][j][1][m];
-						int mul_res_2 = ifm[x_offset][y_offset][2] * weights[i][j][2][m];
-						int mul_res_3 = ifm[x_offset][y_offset][3] * weights[i][j][3][m];
-						int mul_res_4 = ifm[x_offset][y_offset][4] * weights[i][j][4][m];
-						int mul_res_5 = ifm[x_offset][y_offset][5] * weights[i][j][5][m];
-						int mul_res_6 = ifm[x_offset][y_offset][6] * weights[i][j][6][m];
-						int mul_res_7 = ifm[x_offset][y_offset][7] * weights[i][j][7][m];
-						int mul_res_8 = ifm[x_offset][y_offset][8] * weights[i][j][8][m];
-						int mul_res_9 = ifm[x_offset][y_offset][9] * weights[i][j][9][m];
+						int mul_res_0  = ifm[x_offset][y_offset][0]  * weights[i][j][0][m];
+						int mul_res_1  = ifm[x_offset][y_offset][1]  * weights[i][j][1][m];
+						int mul_res_2  = ifm[x_offset][y_offset][2]  * weights[i][j][2][m];
+						int mul_res_3  = ifm[x_offset][y_offset][3]  * weights[i][j][3][m];
+						int mul_res_4  = ifm[x_offset][y_offset][4]  * weights[i][j][4][m];
+						int mul_res_5  = ifm[x_offset][y_offset][5]  * weights[i][j][5][m];
+						int mul_res_6  = ifm[x_offset][y_offset][6]  * weights[i][j][6][m];
+						int mul_res_7  = ifm[x_offset][y_offset][7]  * weights[i][j][7][m];
+						int mul_res_8  = ifm[x_offset][y_offset][8]  * weights[i][j][8][m];
+						int mul_res_9  = ifm[x_offset][y_offset][9]  * weights[i][j][9][m];
 						int mul_res_10 = ifm[x_offset][y_offset][10] * weights[i][j][10][m];
 						int mul_res_11 = ifm[x_offset][y_offset][11] * weights[i][j][11][m];
 						int mul_res_12 = ifm[x_offset][y_offset][12] * weights[i][j][12][m];
 						int mul_res_13 = ifm[x_offset][y_offset][13] * weights[i][j][13][m];
 						int mul_res_14 = ifm[x_offset][y_offset][14] * weights[i][j][14][m];
 						int mul_res_15 = ifm[x_offset][y_offset][15] * weights[i][j][15][m];
+						int mul_res_16 = ifm[x_offset][y_offset][16] * weights[i][j][16][m];
+						int mul_res_17 = ifm[x_offset][y_offset][17] * weights[i][j][17][m];
+						int mul_res_18 = ifm[x_offset][y_offset][18] * weights[i][j][18][m];
+						int mul_res_19 = ifm[x_offset][y_offset][19] * weights[i][j][19][m];
+						int mul_res_20 = ifm[x_offset][y_offset][20] * weights[i][j][20][m];
+						int mul_res_21 = ifm[x_offset][y_offset][21] * weights[i][j][21][m];
+						int mul_res_22 = ifm[x_offset][y_offset][22] * weights[i][j][22][m];
+						int mul_res_23 = ifm[x_offset][y_offset][23] * weights[i][j][23][m];
+						int mul_res_24 = ifm[x_offset][y_offset][24] * weights[i][j][24][m];
+						int mul_res_25 = ifm[x_offset][y_offset][25] * weights[i][j][25][m];
+						int mul_res_26 = ifm[x_offset][y_offset][26] * weights[i][j][26][m];
+						int mul_res_27 = ifm[x_offset][y_offset][27] * weights[i][j][27][m];
+						int mul_res_28 = ifm[x_offset][y_offset][28] * weights[i][j][28][m];
+						int mul_res_29 = ifm[x_offset][y_offset][29] * weights[i][j][29][m];
+						int mul_res_30 = ifm[x_offset][y_offset][30] * weights[i][j][30][m];
+						int mul_res_31 = ifm[x_offset][y_offset][31] * weights[i][j][31][m];
 
 						// accumulation
 						int acc_res_0 = mul_res_0 + mul_res_1;
@@ -149,16 +191,33 @@ void macc(
 						int acc_res_5 = mul_res_10 + mul_res_11;
 						int acc_res_6 = mul_res_12 + mul_res_13;
 						int acc_res_7 = mul_res_14 + mul_res_15;
+						int acc_res_8 = mul_res_16 + mul_res_17;
+						int acc_res_9 = mul_res_18 + mul_res_19;
+						int acc_res_10 = mul_res_20 + mul_res_21;
+						int acc_res_11 = mul_res_22 + mul_res_23;
+						int acc_res_12 = mul_res_24 + mul_res_25;
+						int acc_res_13 = mul_res_26 + mul_res_27;
+						int acc_res_14 = mul_res_28 + mul_res_29;
+						int acc_res_15 = mul_res_30 + mul_res_31;
 
-						int acc_res_8 = acc_res_0 + acc_res_1;
-						int acc_res_9 = acc_res_2 + acc_res_3;
-						int acc_res_10 = acc_res_4 + acc_res_5;
-						int acc_res_11 = acc_res_6 + acc_res_7;
+						int acc_res_16 = acc_res_0 + acc_res_1;
+						int acc_res_17 = acc_res_2 + acc_res_3;
+						int acc_res_18 = acc_res_4 + acc_res_5;
+						int acc_res_19 = acc_res_6 + acc_res_7;
+						int acc_res_20 = acc_res_8 + acc_res_9;
+						int acc_res_21 = acc_res_10 + acc_res_11;
+						int acc_res_22 = acc_res_12 + acc_res_13;
+						int acc_res_23 = acc_res_14 + acc_res_15;
 
-						int acc_res_12 = acc_res_8 + acc_res_9;
-						int acc_res_13 = acc_res_10 + acc_res_11;
+						int acc_res_24 = acc_res_16 + acc_res_17;
+						int acc_res_25 = acc_res_18 + acc_res_19;
+						int acc_res_26 = acc_res_20 + acc_res_21;
+						int acc_res_27 = acc_res_22 + acc_res_23;
 
-						int macc_res = acc_res_12 + acc_res_13;
+						int acc_res_28 = acc_res_24 + acc_res_25;
+						int acc_res_29 = acc_res_26 + acc_res_27;
+
+						int macc_res = acc_res_28 + acc_res_29;
 
 						ofm[k][l][m] = bias_res + macc_res;
 					}
@@ -173,9 +232,6 @@ void last_proc(
 		bool is_yolo,
 		float scaler,
 		int RC_out_size,  // layer.RC_output_size
-		int CHO_real_size,  // layer.CHO_real_size
-		//int max_pool,
-		//int max_pool_stride,
 		int ofm[OFM_MAX][OFM_MAX][IFM_MAX],
 		dtype ofm_mpq[OFM_MAX][OFM_MAX][TM])
 {
@@ -183,7 +239,7 @@ void last_proc(
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
 		for(int j = 0; j < RC_out_size; j ++){
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
-			for(int k = 0; k < CHO_real_size; k ++){
+			for(int k = 0; k < TM; k ++){
 #pragma HLS LOOP_TRIPCOUNT min=64 max=64
 #pragma HLS PIPELINE
 				int g = ofm[i][j][k];

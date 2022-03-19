@@ -13,8 +13,8 @@
 using namespace std;
 using namespace hls;
 
-#define IFM_MAX      64
-#define OFM_MAX      64
+#define IFM_MAX      66
+#define OFM_MAX      66
 #define KERNEL    3
 #define TN  32
 #define TM 64
@@ -43,23 +43,23 @@ struct BindingType{
 struct Layer_Type{
 	int layer_id;
 
-	int RC_block_num;
-	int RC_block_size;
-	int RC_real_size;
-	int RC_out_size;
+	int RC_block_num; // 指宽高 分块系数
+	int RC_block_size; // 指子模型的输入宽高
+	int RC_real_size; // 指子模型在实际模型中对应的宽高
+	int RC_out_size; // 指子模型的输出宽高，主要受卷积步长的影响
 
-	int CHI_block_num;
-	int CHI_block_size;
-	int CHI_real_size;
+	int CHI_block_num;   // 实际模型对应子模型输入通道的分块系数
+	int CHI_block_size; // 子模型在实际模型中的对应的输入通道数,需要是16的倍数
+	int CHI_real_size;  // 一般情况下等于CHI_block_size
 
-	int CHO_block_num;
-	int CHO_block_size;
-	int CHO_real_size;
+	int CHO_block_num;  // 实际模型对应子模型输出通道的分块系数
+	int CHO_block_size;  //  子模型在实际模型中的对应的输出通道数
+	int CHO_real_size;  //   一般情况下等于CHO_block_size
 
-	int kernel;
-	int stride;
-	float scaler;
-	bool is_yolo;
+	int kernel;  // 卷积核的尺寸，1或者3
+	int stride;  // 卷积核的步长，1或者2
+	float scaler;  // 反量化因子
+	bool is_yolo;  // 是否是输出层，输出层的话，不做relu
 };
 
 void convolution(
