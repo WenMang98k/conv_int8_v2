@@ -1,4 +1,4 @@
-# 浮点型卷积
+# 8b定点卷积
 
 
 ***2021***.**08**.__26__ _haha_ // ~~write~~ in [how use markdown](https://www.youtube.com/watch?v=EigxHkpqJdA "需要用到翻墙软件") 
