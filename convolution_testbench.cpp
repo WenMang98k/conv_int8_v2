@@ -12,7 +12,7 @@ int main()
 			32,		// RC_out_size
 
 			1,		// CHI_block_num
-			16,		// CHI_block_size
+			32,		// CHI_block_size
 			16,		// CHI_real_size
 
 			1,		// CHO_block_num

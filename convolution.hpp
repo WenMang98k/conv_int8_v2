@@ -16,7 +16,7 @@ using namespace hls;
 #define IFM_MAX      64
 #define OFM_MAX      64
 #define KERNEL    3
-#define TN  16
+#define TN  32
 #define TM 64
 
 typedef signed char dtype;

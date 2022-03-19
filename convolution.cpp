@@ -13,13 +13,27 @@ void load_ifm(
 #pragma HLS LOOP_TRIPCOUNT min=66 max=66
 #pragma HLS PIPELINE
 
-			AXI_VAL_I input = *str_in_0;
-			str_in_0 ++;
-
-			for(int k = 0; k < TN; k ++){
+			for(int k = 0; k < TN; k +=16){
 #pragma HLS LOOP_TRIPCOUNT min=16 max=16
 //#pragma HLS UNROLL
-				ifm[i][j][k] = input.data[k];
+				AXI_VAL_I input = *str_in_0;
+				str_in_0 ++;
+				ifm[i][j][k+0] = input.data[0];
+				ifm[i][j][k+1] = input.data[1];
+				ifm[i][j][k+2] = input.data[2];
+				ifm[i][j][k+3] = input.data[3];
+				ifm[i][j][k+4] = input.data[4];
+				ifm[i][j][k+5] = input.data[5];
+				ifm[i][j][k+6] = input.data[6];
+				ifm[i][j][k+7] = input.data[7];
+				ifm[i][j][k+8] = input.data[8];
+				ifm[i][j][k+9] = input.data[9];
+				ifm[i][j][k+10] = input.data[10];
+				ifm[i][j][k+11] = input.data[11];
+				ifm[i][j][k+12] = input.data[12];
+				ifm[i][j][k+13] = input.data[13];
+				ifm[i][j][k+14] = input.data[14];
+				ifm[i][j][k+15] = input.data[15];
 			}
 		}
 	}
