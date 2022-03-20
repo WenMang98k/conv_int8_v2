@@ -120,5 +120,9 @@ struct Layer_Type{
 #define TM 64
 ```
 
+# 问题汇总
+- 对于HLS调试器堆栈溢出问题的解决办法。在linker flags处手动输入
+-Wl,--stack,10485760 ![ug902资料]()
+
 
 *** 
