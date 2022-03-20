@@ -119,7 +119,7 @@ struct Layer_Type{
 #define TN  32
 #define TM 64
 ```
-综合结果见下图![solution3]())
+综合结果见下图![solution3](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/66-66-32-64sulotion3.jpg)
  |     |    bram  |      dsp    |
  | :----------   |  :---------:  | ---------------: |
  |   total  |  1090       |  109  |
