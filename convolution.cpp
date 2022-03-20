@@ -265,6 +265,7 @@ void transfer_ofm(
 		AXI_VAL_O * str_out_0, AXI_VAL_O * str_out_1)
 {
 	for(int i = 0; i < layer.RC_out_size; i ++){  // 16
+#pragma HLS LOOP_TRIPCOUNT min=32 max=64
 		for(int j = 0; j < layer.RC_out_size; j ++){  // 16
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
 			AXI_VAL_O output_0;
