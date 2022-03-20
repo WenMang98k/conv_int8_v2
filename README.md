@@ -122,7 +122,7 @@ struct Layer_Type{
 
 # 问题汇总
 - 对于HLS调试器堆栈溢出问题的解决办法。在linker flags处手动输入
--Wl,--stack,10485760 ![ug902资料]()
+-Wl,--stack,10485760 ![ug902资料](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/hl%E5%A0%86%E6%A0%88%E6%BA%A2%E5%87%BA%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95.png)
 
 
 *** 
