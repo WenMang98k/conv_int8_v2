@@ -9,13 +9,13 @@ void load_ifm(
 		dtype ifm[IFM_MAX + 2][IFM_MAX + 2][TN])
 {
 	load_ifm_label0:for(int i = 0; i < RC_block_size; i ++){
-#pragma HLS LOOP_TRIPCOUNT min=66 max=66
+#pragma HLS LOOP_TRIPCOUNT min=8 max=66
 		for(int j = 0; j < RC_block_size; j ++){
-#pragma HLS LOOP_TRIPCOUNT min=66 max=66
+#pragma HLS LOOP_TRIPCOUNT min=8 max=66
 #pragma HLS PIPELINE
 
 			for(int k = 0; k < CHI_block_size; k +=16){
-#pragma HLS LOOP_TRIPCOUNT min=16 max=16
+#pragma HLS LOOP_TRIPCOUNT min=16 max=32
 //#pragma HLS UNROLL
 				AXI_VAL_I input = *str_in_0;
 				str_in_0 ++;
@@ -77,32 +77,32 @@ void load_ibw(
 #pragma HLS LOOP_TRIPCOUNT min=3 max=3
 #pragma HLS PIPELINE
 			for(int k = 0; k < CHO_block_size; k ++){
-#pragma HLS LOOP_TRIPCOUNT min=64 max=64
+#pragma HLS LOOP_TRIPCOUNT min=32 max=64
 
 				for(int l = 0; l < CHI_block_size; l +=16){
-#pragma HLS LOOP_TRIPCOUNT min=16 max=16
+#pragma HLS LOOP_TRIPCOUNT min=32 max=32
 #pragma HLS UNROLL
 					input = *str_in_1;
 					str_in_1 ++;
-					weights[i][j][l+0][k] = input.data[l+0];
-					weights[i][j][l+1][k] = input.data[l+1];
-					weights[i][j][l+2][k] = input.data[l+2];
-					weights[i][j][l+3][k] = input.data[l+3];
+					weights[i][j][l+0][k] = input.data[0];
+					weights[i][j][l+1][k] = input.data[1];
+					weights[i][j][l+2][k] = input.data[2];
+					weights[i][j][l+3][k] = input.data[3];
 
-					weights[i][j][l+4][k] = input.data[l+4];
-					weights[i][j][l+5][k] = input.data[l+5];
-					weights[i][j][l+6][k] = input.data[l+6];
-					weights[i][j][l+7][k] = input.data[l+7];
+					weights[i][j][l+4][k] = input.data[4];
+					weights[i][j][l+5][k] = input.data[5];
+					weights[i][j][l+6][k] = input.data[6];
+					weights[i][j][l+7][k] = input.data[7];
 
-					weights[i][j][l+8][k] = input.data[l+8];
-					weights[i][j][l+9][k] = input.data[l+9];
-					weights[i][j][l+10][k] = input.data[l+10];
-					weights[i][j][l+11][k] = input.data[l+11];
+					weights[i][j][l+8][k] = input.data[8];
+					weights[i][j][l+9][k] = input.data[9];
+					weights[i][j][l+10][k] = input.data[10];
+					weights[i][j][l+11][k] = input.data[11];
 
-					weights[i][j][l+12][k] = input.data[l+12];
-					weights[i][j][l+13][k] = input.data[l+13];
-					weights[i][j][l+14][k] = input.data[l+14];
-					weights[i][j][l+15][k] = input.data[l+15];
+					weights[i][j][l+12][k] = input.data[12];
+					weights[i][j][l+13][k] = input.data[13];
+					weights[i][j][l+14][k] = input.data[14];
+					weights[i][j][l+15][k] = input.data[15];
 
 				}
 			}
@@ -131,12 +131,12 @@ void macc(
 		for(int j = 0; j < kernel; j ++){
 #pragma HLS LOOP_TRIPCOUNT min=1 max=3
 			for(int k = 0; k < RC_out_size; k ++){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
+#pragma HLS LOOP_TRIPCOUNT min=8 max=64
 				for(int l = 0; l < RC_out_size; l ++){
 #pragma HLS PIPELINE II=1
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
+#pragma HLS LOOP_TRIPCOUNT min=8 max=64
 					for(int m = 0; m < CHO_block_size; m ++){
-#pragma HLS LOOP_TRIPCOUNT min=64 max=64
+#pragma HLS LOOP_TRIPCOUNT min=32 max=64
 						int bias_res;
 
 						if((i == 0) && (j == 0) && (channel_in_iter == 0))
@@ -232,15 +232,16 @@ void last_proc(
 		bool is_yolo,
 		float scaler,
 		int RC_out_size,  // layer.RC_output_size
-		int ofm[OFM_MAX][OFM_MAX][IFM_MAX],
+		int CHO_block_size,
+		int ofm[OFM_MAX][OFM_MAX][TM],
 		dtype ofm_mpq[OFM_MAX][OFM_MAX][TM])
 {
 	for(int i = 0; i < RC_out_size; i ++){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
+#pragma HLS LOOP_TRIPCOUNT min=8 max=64
 		for(int j = 0; j < RC_out_size; j ++){
+#pragma HLS LOOP_TRIPCOUNT min=8 max=64
+			for(int k = 0; k < CHO_block_size; k ++){
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
-			for(int k = 0; k < TM; k ++){
-#pragma HLS LOOP_TRIPCOUNT min=64 max=64
 #pragma HLS PIPELINE
 				int g = ofm[i][j][k];
 				// anti-quantization, leaky-ReLu, saturation, quantization
@@ -269,19 +270,19 @@ void transfer_ofm(
 			AXI_VAL_O output_0;
 			AXI_VAL_O output_1;
 
-			for(int k = 0; k < layer.CHO_real_size / TN / 2; k ++){  // 2
+			for(int k = 0; k < layer.CHO_block_size / 16 / 2; k ++){  // 2
 #pragma HLS LOOP_TRIPCOUNT min=2 max=2
-				for(int l = 0; l < TN; l ++){  // 16
+				for(int l = 0; l < 16; l ++){  // 16
 #pragma HLS LOOP_TRIPCOUNT min=16 max=16
 #pragma HLS UNROLL
 					output_0.data[l] = ofm_mpq[i][j][k * TN + l];
-					output_1.data[l] = ofm_mpq[i][j][k * TN + l + layer.CHO_real_size / 2];
+					output_1.data[l] = ofm_mpq[i][j][k * TN + l + layer.CHO_block_size / 2];
 				}
 
 				if(
 						(i == (layer.RC_real_size - 1))
 						&& (j == (layer.RC_real_size - 1))
-						&& (k == (layer.CHO_real_size / TN / 2 - 1))
+						&& (k == (layer.CHO_block_size / 16 / 2 - 1))
 						&& (row_iter == (layer.RC_block_num - 1))
 						&& (col_iter == (layer.RC_block_num - 1))
 						&& (channel_out_iter == (layer.CHO_block_num - 1))){
@@ -352,14 +353,14 @@ void convolution(
 				convCHI_lebel:for(int CHI_iter = 0; CHI_iter < layer.CHI_block_num; CHI_iter ++){
 #pragma HLS DATAFLOW
 
-					load_ifm(layer.RC_real_size, str_in_0, ifm);
+					load_ifm(layer.RC_block_size, layer.CHI_block_size,str_in_0, ifm);
 
-					load_ibw(layer.kernel, layer.CHO_real_size, str_in_1, bias, weights);
+					load_ibw(layer.kernel, layer.CHI_block_size, layer.CHO_block_size, str_in_1, bias, weights);
 
-					macc(layer.kernel, layer.RC_out_size, layer.stride, CHI_iter, ifm, weights, bias, ofm);
+					macc(layer.kernel, layer.RC_out_size, layer.stride, CHI_iter, layer.CHI_block_size, layer.CHO_block_size,ifm, weights, bias, ofm);
 				}
-
-				last_proc(layer.is_yolo, layer.scaler, layer.RC_out_size, layer.CHO_real_size,  ofm, ofm_mpq);
+				cout<<"onchip_sclaer:"<<layer.scaler<<endl;
+				last_proc(layer.is_yolo, layer.scaler, layer.RC_out_size, layer.CHO_block_size,  ofm, ofm_mpq);
 
 				transfer_ofm(layer, R_iter, C_iter, CHO_iter, ofm_mpq, str_out_0, str_out_1);
 			}

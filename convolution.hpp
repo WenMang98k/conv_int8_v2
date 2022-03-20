@@ -44,7 +44,7 @@ struct Layer_Type{
 	int layer_id;
 
 	int RC_block_num; // 指宽高 分块系数
-	int RC_block_size; // 指子模型的输入宽高
+	int RC_block_size; // 指子模型的输入宽高,填充后的维度
 	int RC_real_size; // 指子模型在实际模型中对应的宽高
 	int RC_out_size; // 指子模型的输出宽高，主要受卷积步长的影响
 
