@@ -126,6 +126,18 @@ struct Layer_Type{
  |   total  |  1090       |  109  |
  |available|1824|2520|
  |utilization   |  59      |4       | 
+
+针对DSP利用率较低，对第三次综合进行再次优化，增加了data flow指令，对部分循环进行了pipeline展开，结果见下图<br>
+
+
+ |     |    bram  |      dsp    |
+ | :----------   |  :---------:  | ---------------: |
+ |   total  |  1090       |  2030  |
+ |available|1824|2520|
+ |utilization   |  59      |80       | 
+
+
+
 # bug汇总
 - 对于HLS调试器堆栈溢出问题的解决办法。在linker flags处手动输入
 -Wl,--stack,10485760 ![ug902资料](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/hl%E5%A0%86%E6%A0%88%E6%BA%A2%E5%87%BA%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95.png)

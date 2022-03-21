@@ -17,13 +17,13 @@ int main()
 	//Layer_Type layer = {0,	 1,		  64,	    	64,			 64,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   1,	  1,3.6251296933187405e-06,0};
 
 	//测试卷积核步长为1,需要更改scaler和 RC_OUT_SIZE 64
-	//Layer_Type layer = {0,	 1,		  66,	    	64,			 64,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   3,	  1,2.3947541194502264e-06,0};
+	Layer_Type layer = {0,	 1,		  66,	    	64,			 64,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   3,	  1,2.0781274088221835e-06,0};
 
 	//测试卷积步长为2，需要更改scaler和 RC_OUT_SIZE 32
 	//Layer_Type layer = {0,	 1,		  66,	    	64,			 32,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   3,	  2,1.8876104377341107e-06,0};
 
 	//yolo前一层卷积，需要更改scaler和 RC_OUT_SIZE 64
-	Layer_Type layer = {0,	 1,		  64,	    	64,			 64,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   1,	  1,3.2641714824421797e-06,1};
+	//Layer_Type layer = {0,	 1,		  64,	    	64,			 64,		 1,			   32, 			  32,		   	1,			  64,		 	 64,		   1,	  1,3.2641714824421797e-06,1};
 
 	cout<< "layer_scaler："<<setprecision(20)<<float(layer.scaler)<<endl;
 	int ifm_len = layer.RC_block_num * layer.RC_block_num * layer.CHO_block_num * layer.CHI_block_num

@@ -14,8 +14,7 @@ void load_ifm(
 #pragma HLS LOOP_TRIPCOUNT min=8 max=66
 #pragma HLS PIPELINE
 
-			for(int k = 0; k < CHI_block_size; k +=16){
-#pragma HLS LOOP_TRIPCOUNT min=16 max=32
+			for(int k = 0; k < TN; k +=16){
 //#pragma HLS UNROLL
 				AXI_VAL_I input = *str_in_0;
 				str_in_0 ++;
@@ -52,7 +51,7 @@ void load_ibw(
 	AXI_VAL_I input;
 
 	load_bias:
-	for(int i = 0; i < CHO_block_size / 4; i ++){  // TM * 32 / 128
+	for(int i = 0; i < TM / 4; i ++){  // TM * 32 / 128
 #pragma HLS LOOP_TRIPCOUNT min=64 max=64
 #pragma HLS PIPELINE
 		input = *str_in_1;
@@ -72,15 +71,13 @@ void load_ibw(
 	//°´ÕÕ[kernal_x][kernal_y][channel_in][channel_out] channel_in->chaneel_out->kernal_y->kernal_x
 	load_weights:
 	for(int i = 0; i < kernel; i ++){
-#pragma HLS LOOP_TRIPCOUNT min=3 max=3
+#pragma HLS LOOP_TRIPCOUNT min=1 max=3
 		for(int j = 0; j < kernel; j ++){
-#pragma HLS LOOP_TRIPCOUNT min=3 max=3
+#pragma HLS LOOP_TRIPCOUNT min=1 max=3
 #pragma HLS PIPELINE
-			for(int k = 0; k < CHO_block_size; k ++){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
-
-				for(int l = 0; l < CHI_block_size; l +=16){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=32
+			for(int k = 0; k < TM; k ++){
+#pragma HLS UNROLL
+				for(int l = 0; l < TN; l +=16){
 #pragma HLS UNROLL
 					input = *str_in_1;
 					str_in_1 ++;
@@ -135,8 +132,8 @@ void macc(
 				for(int l = 0; l < RC_out_size; l ++){
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min=8 max=64
-					for(int m = 0; m < CHO_block_size; m ++){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
+					for(int m = 0; m < TM; m ++){
+#pragma HLS UNROLL
 						int bias_res;
 
 						if((i == 0) && (j == 0) && (channel_in_iter == 0))
@@ -240,9 +237,9 @@ void last_proc(
 #pragma HLS LOOP_TRIPCOUNT min=8 max=64
 		for(int j = 0; j < RC_out_size; j ++){
 #pragma HLS LOOP_TRIPCOUNT min=8 max=64
-			for(int k = 0; k < CHO_block_size; k ++){
-#pragma HLS LOOP_TRIPCOUNT min=32 max=64
 #pragma HLS PIPELINE
+			for(int k = 0; k < TM; k ++){
+#pragma HLS UNROLL
 				int g = ofm[i][j][k];
 				// anti-quantization, leaky-ReLu, saturation, quantization
 				float pixel_aq;
@@ -270,15 +267,41 @@ void transfer_ofm(
 #pragma HLS LOOP_TRIPCOUNT min=32 max=64
 			AXI_VAL_O output_0;
 			AXI_VAL_O output_1;
+			for(int k = 0; k < TM / 16 / 2; k ++){  // 2
+#pragma HLS PIPELINE
+				output_0.data[0] = ofm_mpq[i][j][k * TN + 0];
+				output_0.data[1] = ofm_mpq[i][j][k * TN + 1];
+				output_0.data[2] = ofm_mpq[i][j][k * TN + 2];
+				output_0.data[3] = ofm_mpq[i][j][k * TN + 3];
+				output_0.data[4] = ofm_mpq[i][j][k * TN + 4];
+				output_0.data[5] = ofm_mpq[i][j][k * TN + 5];
+				output_0.data[6] = ofm_mpq[i][j][k * TN + 6];
+				output_0.data[7] = ofm_mpq[i][j][k * TN + 7];
+				output_0.data[8] = ofm_mpq[i][j][k * TN + 8];
+				output_0.data[9] = ofm_mpq[i][j][k * TN + 9];
+				output_0.data[10] = ofm_mpq[i][j][k * TN + 10];
+				output_0.data[11] = ofm_mpq[i][j][k * TN + 11];
+				output_0.data[12] = ofm_mpq[i][j][k * TN + 12];
+				output_0.data[13] = ofm_mpq[i][j][k * TN + 13];
+				output_0.data[14] = ofm_mpq[i][j][k * TN + 14];
+				output_0.data[15] = ofm_mpq[i][j][k * TN + 15];
 
-			for(int k = 0; k < layer.CHO_block_size / 16 / 2; k ++){  // 2
-#pragma HLS LOOP_TRIPCOUNT min=2 max=2
-				for(int l = 0; l < 16; l ++){  // 16
-#pragma HLS LOOP_TRIPCOUNT min=16 max=16
-#pragma HLS UNROLL
-					output_0.data[l] = ofm_mpq[i][j][k * TN + l];
-					output_1.data[l] = ofm_mpq[i][j][k * TN + l + layer.CHO_block_size / 2];
-				}
+				output_1.data[0] = ofm_mpq[i][j][k * TN + 0 + layer.CHO_block_size / 2];
+				output_1.data[1] = ofm_mpq[i][j][k * TN + 1 + layer.CHO_block_size / 2];
+				output_1.data[2] = ofm_mpq[i][j][k * TN + 2 + layer.CHO_block_size / 2];
+				output_1.data[3] = ofm_mpq[i][j][k * TN + 3 + layer.CHO_block_size / 2];
+				output_1.data[4] = ofm_mpq[i][j][k * TN + 4 + layer.CHO_block_size / 2];
+				output_1.data[5] = ofm_mpq[i][j][k * TN + 5 + layer.CHO_block_size / 2];
+				output_1.data[6] = ofm_mpq[i][j][k * TN + 6 + layer.CHO_block_size / 2];
+				output_1.data[7] = ofm_mpq[i][j][k * TN + 7 + layer.CHO_block_size / 2];
+				output_1.data[8] = ofm_mpq[i][j][k * TN + 8 + layer.CHO_block_size / 2];
+				output_1.data[9] = ofm_mpq[i][j][k * TN + 9 + layer.CHO_block_size / 2];
+				output_1.data[10] = ofm_mpq[i][j][k * TN + 10 + layer.CHO_block_size / 2];
+				output_1.data[11] = ofm_mpq[i][j][k * TN + 11 + layer.CHO_block_size / 2];
+				output_1.data[12] = ofm_mpq[i][j][k * TN + 12 + layer.CHO_block_size / 2];
+				output_1.data[13] = ofm_mpq[i][j][k * TN + 13 + layer.CHO_block_size / 2];
+				output_1.data[14] = ofm_mpq[i][j][k * TN + 14 + layer.CHO_block_size / 2];
+				output_1.data[15] = ofm_mpq[i][j][k * TN + 15 + layer.CHO_block_size / 2];
 
 				if(
 						(i == (layer.RC_real_size - 1))
