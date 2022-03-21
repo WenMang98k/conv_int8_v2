@@ -128,7 +128,7 @@ struct Layer_Type{
  |utilization   |  59      |4       | 
 
 针对DSP利用率较低，对第三次综合进行再次优化，增加了data flow指令，对部分循环进行了pipeline展开，结果见下图<br>
-
+![solution3-2](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/66-66-32-64sulotion3-2.jpg)
 
  |     |    bram  |      dsp    |
  | :----------   |  :---------:  | ---------------: |
