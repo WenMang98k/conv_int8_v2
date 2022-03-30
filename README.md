@@ -147,6 +147,7 @@ struct Layer_Type{
 - 增加了DATAFLOW指令.<br>
 综合结果见下图<br>
 ![solution3-2](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/66-66-32-64DATAFLOW.jpg "综合结果")
+
  |     |    bram  |      dsp    |
  | :----------   |  :---------:  | ---------------: |
  |   total  |  1090       |  1326  |
