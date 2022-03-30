@@ -136,11 +136,31 @@ struct Layer_Type{
  |available|1824|2520|
  |utilization   |  59      |80       | 
 
+## 2022.03.21-29 第四次综合
+```c++
+#define IFM_MAX      66
+#define OFM_MAX      66
+#define KERNEL    3
+#define TN  32
+#define TM 64
+```
+- 增加了DATAFLOW指令.<br>
+综合结果见下图<br>
+![solution3-2](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/66-66-32-64DATAFLOW.jpg "综合结果")
+ |     |    bram  |      dsp    |
+ | :----------   |  :---------:  | ---------------: |
+ |   total  |  1090       |  1326  |
+ |available|1824|2520|
+ |utilization   |  59      |52       | 
 
 
 # bug汇总
-- 对于HLS调试器堆栈溢出问题的解决办法。在linker flags处手动输入
--Wl,--stack,10485760 ![ug902资料](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/hl%E5%A0%86%E6%A0%88%E6%BA%A2%E5%87%BA%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95.png)
+> 对于HLS调试器堆栈溢出问题的解决办法。在linker flags处手动输入
+- -Wl,--stack,10485760 ![ug902资料](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/hl%E5%A0%86%E6%A0%88%E6%BA%A2%E5%87%BA%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95.png)
 
+> 导出RTL阶段出现ERROR: [IMPL 213-28]，导致导出失败<br>
+- __问题描述:__ 再仿真和综合都通过之后出现上述错误，如图![bug](https://github.com/BintaoWang/conv_int8_v2/blob/dev/result/ERROR%5BIMPL213-28%5D.jpg "ERROR:IMPL213-28")
+- __解决措施:__ 更改电脑时间到2021年之前，临时办法，暂无更好的解决措施<br>
+ 
 
 *** 
