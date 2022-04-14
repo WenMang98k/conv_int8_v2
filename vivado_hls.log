@@ -1,0 +1,14 @@
+INFO: [HLS 200-10] Running 'D:/Xilinx/Vivado/2018.3/bin/unwrapped/win64.o/vivado_hls.exe'
+INFO: [HLS 200-10] For user 'wangbt' on host 'tolfkinglab' (Windows NT_amd64 version 6.2) on Wed Apr 13 21:00:49 +0800 2022
+INFO: [HLS 200-10] In directory 'E:/0_compacting_FPGA/tempv1/hls_v4'
+INFO: [HLS 200-10] Opening project 'E:/0_compacting_FPGA/tempv1/hls_v4/Convolution'.
+INFO: [HLS 200-10] Opening solution 'E:/0_compacting_FPGA/tempv1/hls_v4/Convolution/solution1'.
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-10] Setting target device to 'xczu9eg-ffvb1156-2-i'
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../convolution_testbench.cpp in debug mode
+   Compiling ../../../../convolution.cpp in debug mode
+   Generating csim.exe
+INFO: [SIM 211-1] CSim file generation done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
